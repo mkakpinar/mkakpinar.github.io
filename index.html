@@ -753,8 +753,9 @@
                         const lines = csvData.split('\n').filter(line => line.trim()); // Remove empty lines
                         const headers = lines[0].split(',').map(h => h.trim());
                         
-                        // Process data to get counts by rating
+                        // Process data to get counts by rating and store player IDs
                         const playerCounts = {};
+                        const playerIdsByRating = {}; // Store IDs for each rating
                         lines.slice(1).forEach(line => {
                             const values = line.split(',').map(v => v.trim());
                             const player = {};
@@ -762,10 +763,17 @@
                                 player[header] = values[index];
                             });
                             
-                            // Try different possible rating field names
+                            // Get player ID and rating
+                            const id = parseInt(player.Id);
                             const rating = parseInt(player.Rating || player.rating || player['Player Rating']);
-                            if (!isNaN(rating)) {
+                            
+                            if (!isNaN(rating) && !isNaN(id)) {
                                 playerCounts[rating] = (playerCounts[rating] || 0) + 1;
+                                // Store the player ID for this rating
+                                if (!playerIdsByRating[rating]) {
+                                    playerIdsByRating[rating] = [];
+                                }
+                                playerIdsByRating[rating].push(id);
                             }
                         });
 
@@ -773,7 +781,8 @@
                         const result = Object.entries(playerCounts)
                             .map(([rating, count]) => ({
                                 rating: parseInt(rating),
-                                count: count
+                                count: count,
+                                playerIds: playerIdsByRating[parseInt(rating)] // Store IDs for each rating
                             }))
                             .sort((a, b) => b.rating - a.rating);
 
@@ -804,13 +813,18 @@
                         // Get current club players data
                         const clubPlayersData = JSON.parse(document.getElementById('clubPlayers').value);
                         
+                        // Create a map of locked player IDs for faster lookup
+                        const lockedPlayerIdsSet = new Set(lockedPlayerIds);
+                        
                         // Remove locked players and recalculate counts
                         const filteredPlayers = clubPlayersData.map(player => {
-                            // Since we're working with processed data that only has rating and count,
-                            // we'll just reduce the count by 1 for each locked player of that rating
+                            // Count how many players of this rating are locked
+                            const lockedCount = player.playerIds.filter(id => lockedPlayerIdsSet.has(id)).length;
+                            
                             return {
                                 rating: player.rating,
-                                count: Math.max(0, player.count - 1)
+                                count: Math.max(0, player.count - lockedCount),
+                                playerIds: player.playerIds.filter(id => !lockedPlayerIdsSet.has(id)) // Keep only unlocked player IDs
                             };
                         }).filter(player => player.count > 0); // Only keep players with count > 0
                         
