@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SBC Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .input-section, .output-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result-section {
+            margin-top: 20px;
+        }
+        .error {
+            color: #f44336;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+        }
+        .success {
+            color: #4CAF50;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #e8f5e9;
+            border-radius: 4px;
+        }
+        pre {
+            background-color: #ffffff;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .squad-status {
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 4px solid;
+        }
+        .completed {
+            background-color: #e8f5e9;
+            border-left-color: #4CAF50;
+        }
+        .incomplete {
+            background-color: #f5f5f5;
+            border-left-color: #9e9e9e;
+        }
+        .used-players, .missing-players {
+            display: block;
+            margin: 5px 0;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .used-players {
+            background-color: #e8f5e9;
+            border: 1px solid #4CAF50;
+        }
+        .missing-players {
+            background-color: #ffebee;
+            border: 1px solid #f44336;
+        }
+        .section-title {
+            color: #333;
+            margin: 20px 0 10px 0;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #eee;
+        }
+        .info-text {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+        .bookmarklet {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-family: monospace;
+            cursor: move;
+            user-select: all;
+        }
+        .bookmarklet-info {
+            color: #666;
+            font-size: 0.9em;
+            margin: 5px 0;
+        }
+        .player-list {
+            margin: 10px 0;
+        }
+        .player-list h4 {
+            margin: 5px 0;
+            color: #333;
+        }
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 10px;
+            margin: 2px 0;
+            border-radius: 4px;
+            background-color: #f8f8f8;
+        }
+        .player-item.used {
+            background-color: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+        .player-item.unused {
+            background-color: #f5f5f5;
+            border-left: 4px solid #9e9e9e;
+        }
+        .player-rating {
+            font-weight: bold;
+            color: #333;
+        }
+        .player-count {
+            color: #666;
+        }
+        .player-count.original {
+            color: #1976d2;
+        }
+        .player-count.used {
+            color: #f44336;
+        }
+        .remaining-players-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .remaining-players-section {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .remaining-players-section h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #eee;
+        }
+        .json-preview {
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .json-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: #f8f8f8;
+            border-bottom: 1px solid #ddd;
+        }
+        .json-preview-content {
+            padding: 12px;
+            background-color: #fff;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .json-preview-content.collapsed {
+            max-height: 100px;
+        }
+        .json-preview-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .expand-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .expand-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>SBC Calculator</h1>
+    <div class="container">
+        <div class="input-section">
+            <h2>Input Data</h2>
+            <div>
+                <h3>SBC Squad Requirements</h3>
+                <div class="info-text">Enter the squads you want to build with their ratings and counts. The pre-loaded data shows the requirements for CR7 SBC - you can edit these values for your needs.</div>
+                <textarea id="squadRequirements"></textarea>
+            </div>
+            <div>
+                <h3>Club Players</h3>
+                <div class="info-text">Upload your club players CSV file exported from Paletools Club Analyzer</div>
+                <input type="file" id="clubPlayersFile" accept=".csv" onchange="handleClubPlayersFile(event)">
+                <div class="json-preview">
+                    <div class="json-preview-header">
+                        <span>Club Players Data Preview</span>
+                        <button onclick="toggleJsonPreview('clubPlayersPreview')" class="expand-button">Expand</button>
+                    </div>
+                    <div id="clubPlayersPreview" class="json-preview-content collapsed">
+                        <pre></pre>
+                    </div>
+                </div>
+            </div>
+            <div>
+                <h3>Locked Players (Optional)</h3>
+                <div class="info-text">Upload your locked players CSV file exported from Paletools  Club > Locked Players > Export</div>
+                <input type="file" id="lockedPlayersFile" accept=".csv" onchange="handleLockedPlayersFile(event)">
+                <div class="json-preview">
+                    <div class="json-preview-header">
+                        <span>Available Players After Removing Locked Players</span>
+                        <button onclick="toggleJsonPreview('lockedPlayersPreview')" class="expand-button">Expand</button>
+                    </div>
+                    <div id="lockedPlayersPreview" class="json-preview-content collapsed">
+                        <pre></pre>
+                    </div>
+                </div>
+
+            </div>
+            <div>
+                <h3>Final Squad Ratings and Counts</h3>
+                <div class="info-text">This data will be used to calculate the SBC squads</div>
+                <textarea id="clubPlayers" placeholder='[{"rating": 81, "count": 54}, {"rating": 82, "count": 84}]'></textarea>
+            </div>
+            
+            <div>
+                <h3>Futbin Cheapest Combination Ratings</h3>
+                <div class="bookmarklet-info">If you want to update the combinations Drag This <a href="javascript:(function(){const tables=Array.from(document.querySelectorAll('.table-combination-row'));const r=tables.find(row=>row.querySelector('a')?.href.includes('ps_price'));if(!r){console.log('No PS combination row found');return;}const c=Array.from(r.querySelectorAll('.table-combination-cell')).map(cell=>{const count=parseInt(cell.getAttribute('data-start-count'));if(count===0)return null;console.log('Cell found with count:',count);const link=cell.querySelector('a');if(!link)return null;console.log('Link found:',link.href);const ratingMatch=link.href.match(/player_rating=(\d+)/);console.log('Rating match:',ratingMatch);const rating=parseInt(ratingMatch?.[1]||0);console.log('Final rating:',rating);const price=parseInt(cell.getAttribute('data-avg-price'));console.log('Price:',price);return{rating,count,price};}).filter(c=>c);const currentPageData={combinations:c,totalPrice:parseInt(r.getAttribute('data-total-price'))};const currentUrl=new URL(window.location.href);const squadRating=parseInt(currentUrl.searchParams.get('rating'));if(!squadRating){console.log('No squad rating found in URL');return;}let allResults=JSON.parse(localStorage.getItem('futbinSBCResults')||'{}');allResults[squadRating]=currentPageData;localStorage.setItem('futbinSBCResults',JSON.stringify(allResults));console.log(`Saved data for squad rating ${squadRating}`);const t=JSON.stringify(allResults,null,2);navigator.clipboard.writeText(t).then(()=>console.log('Copied all results:',t)).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);console.log('Copied (fallback):',t);});})();">Combination Extractor</a> to your bookmarks and open futbin sbc rating page and click this bookmarklet on every page and you will get the combinations on your clipboard so paste it here.</div>
+                <div class="info-text">This list updated on 30.03.2025 and contains 83-91 rated squads best solutions, don't change if you don't need more recent solutions.</div>
+                <textarea id="squadCombinations" placeholder="Paste your squad combinations JSON here"></textarea>
+            </div>
+            <button onclick="calculateSquads()">Calculate</button>
+        </div>
+        <div class="output-section">
+            <h2>Results</h2>
+            <div id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        // Pre-loaded squad combinations data
+        const defaultSquadCombinations = {
+            "83": {
+                "combinations": [
+                    {"rating": 81, "count": 1},
+                    {"rating": 82, "count": 6},
+                    {"rating": 83, "count": 1},
+                    {"rating": 84, "count": 3}
+                ]
+            },
+            "84": {
+                "combinations": [
+                    {"rating": 79, "count": 1},
+                    {"rating": 84, "count": 10}
+                ]
+            },
+            "85": {
+                "combinations": [
+                    {"rating": 83, "count": 1},
+                    {"rating": 84, "count": 3},
+                    {"rating": 85, "count": 6},
+                    {"rating": 86, "count": 1}
+                ]
+            },
+            "86": {
+                "combinations": [
+                    {"rating": 84, "count": 6},
+                    {"rating": 86, "count": 1},
+                    {"rating": 87, "count": 4}
+                ]
+            },
+            "87": {
+                "combinations": [
+                    {"rating": 84, "count": 2},
+                    {"rating": 85, "count": 5},
+                    {"rating": 88, "count": 2},
+                    {"rating": 89, "count": 2}
+                ]
+            },
+            "88": {
+                "combinations": [
+                    {"rating": 86, "count": 6},
+                    {"rating": 88, "count": 1},
+                    {"rating": 89, "count": 4}
+                ]
+            },
+            "89": {
+                "combinations": [
+                    {"rating": 87, "count": 6},
+                    {"rating": 89, "count": 3},
+                    {"rating": 91, "count": 2}
+                ]
+            },
+            "90": {
+                "combinations": [
+                    {"rating": 87, "count": 1},
+                    {"rating": 88, "count": 4},
+                    {"rating": 89, "count": 1},
+                    {"rating": 90, "count": 1},
+                    {"rating": 91, "count": 4}
+                ]
+            },
+            "91": {
+                "combinations": [
+                    {"rating": 89, "count": 6},
+                    {"rating": 91, "count": 1},
+                    {"rating": 92, "count": 4}
+                ]
+            }
+        };
+
+        // Pre-loaded squad requirements data
+        const defaultSquadRequirements = [
+            {"squad-rating": 90, "count": 2},
+            {"squad-rating": 89, "count": 4},
+            {"squad-rating": 88, "count": 5},
+            {"squad-rating": 87, "count": 4},
+            {"squad-rating": 86, "count": 5},
+            {"squad-rating": 85, "count": 1}
+        ];
+
+        // Set default data on page load
+        window.onload = function() {
+            console.log('Setting default data...');
+            document.getElementById('squadCombinations').value = JSON.stringify(defaultSquadCombinations, null, 2);
+            document.getElementById('squadRequirements').value = JSON.stringify(defaultSquadRequirements, null, 2);
+            console.log('Default data set:', {
+                combinations: document.getElementById('squadCombinations').value,
+                requirements: document.getElementById('squadRequirements').value
+            });
+        };
+
+        function calculateSquads() {
+            try {
+                // Get input values
+                const clubPlayers = JSON.parse(document.getElementById('clubPlayers').value);
+                const squadRequirements = JSON.parse(document.getElementById('squadRequirements').value);
+                const futbinCombinations = JSON.parse(document.getElementById('squadCombinations').value);
+
+                console.log('Club Players:', clubPlayers);
+                console.log('Squad Requirements:', squadRequirements);
+                console.log('Futbin Combinations:', futbinCombinations);
+
+                // Sort squad requirements by rating in descending order
+                squadRequirements.sort((a, b) => b["squad-rating"] - a["squad-rating"]);
+
+                const completedSquads = [];
+                const incompleteSquads = [];
+                let remainingPlayers = [...clubPlayers];
+
+                console.log('Initial Remaining Players:', remainingPlayers);
+
+                // First pass: Process completed squads
+                squadRequirements.forEach(req => {
+                    const squadRating = req["squad-rating"];
+                    const combination = futbinCombinations[squadRating];
+                    console.log(`Processing ${squadRating}-rated squad requirement:`, combination);
+
+                    if (!combination) {
+                        console.log(`No combination found for ${squadRating}-rated squad`);
+                        return;
+                    }
+
+                    // Try to complete the required number of squads
+                    for (let i = 0; i < req.count; i++) {
+                        const usedPlayers = [];
+                        let canComplete = true;
+
+                        // Check if we can complete this squad
+                        combination.combinations.forEach(req => {
+                            const availableCount = getPlayerCount(remainingPlayers, req.rating);
+                            console.log(`Checking ${req.rating}-rated players: Available ${availableCount}, Required ${req.count}`);
+                            
+                            if (availableCount >= req.count) {
+                                usedPlayers.push({
+                                    rating: req.rating,
+                                    count: req.count
+                                });
+                            } else {
+                                canComplete = false;
+                            }
+                        });
+
+                        if (canComplete) {
+                            // Remove used players from remaining
+                            usedPlayers.forEach(player => {
+                                removePlayers(remainingPlayers, player.rating, player.count);
+                            });
+
+                            completedSquads.push({
+                                "squad-rating": squadRating,
+                                usedPlayers: usedPlayers
+                            });
+                            console.log(`Completed ${squadRating}-rated squad ${i + 1}/${req.count}`);
+                        } else {
+                            // Calculate missing players for incomplete squad
+                            const missingPlayers = {};
+                            combination.combinations.forEach(req => {
+                                const availableCount = getPlayerCount(remainingPlayers, req.rating);
+                                if (availableCount < req.count) {
+                                    missingPlayers[req.rating] = req.count - availableCount;
+                                }
+                            });
+
+                            incompleteSquads.push({
+                                "squad-rating": squadRating,
+                                missingPlayers: missingPlayers
+                            });
+                            console.log(`Incomplete ${squadRating}-rated squad ${i + 1}/${req.count}`);
+                        }
+                    }
+                });
+
+                // Second pass: Process incomplete squads with remaining players
+                const remainingSquads = incompleteSquads.map(squad => ({...squad}));
+                let remainingPlayersAfterCompleted = [...remainingPlayers];
+                const usedFromIncomplete = new Map();
+
+                remainingSquads.forEach(squad => {
+                    const squadRating = parseInt(squad["squad-rating"]);
+                    const combination = futbinCombinations[squadRating];
+                    
+                    if (combination) {
+                        // Calculate missing and used players for this squad
+                        combination.combinations.forEach(req => {
+                            const availableCount = getPlayerCount(remainingPlayersAfterCompleted, req.rating);
+                            const neededCount = req.count;
+                            
+                            if (availableCount > 0) {
+                                // Use the minimum of available and needed players
+                                const usedCount = Math.min(availableCount, neededCount);
+                                usedFromIncomplete.set(req.rating, (usedFromIncomplete.get(req.rating) || 0) + usedCount);
+                                removePlayers(remainingPlayersAfterCompleted, req.rating, usedCount);
+                                
+                                // Calculate missing players (needed - used)
+                                if (usedCount < neededCount) {
+                                    squad.missingPlayers[req.rating] = neededCount - usedCount;
+                                }
+                            } else {
+                                // All needed players are missing
+                                squad.missingPlayers[req.rating] = neededCount;
+                            }
+                        });
+
+                        // Verify total players (used + missing) equals 11
+                        let totalPlayers = 0;
+                        // Add up used players
+                        combination.combinations.forEach(req => {
+                            const usedCount = usedFromIncomplete.get(req.rating) || 0;
+                            totalPlayers += usedCount;
+                        });
+                        // Add up missing players
+                        Object.values(squad.missingPlayers).forEach(count => {
+                            totalPlayers += count;
+                        });
+
+                        // If total is not 11, adjust the missing players
+                        if (totalPlayers !== 11) {
+                            console.log(`Warning: Squad ${squadRating} has ${totalPlayers} players, should be 11`);
+                        }
+                    }
+                });
+
+                console.log('Final Results:');
+                console.log('Completed Squads:', completedSquads);
+                console.log('Incomplete Squads:', remainingSquads);
+                console.log('Remaining Players:', remainingPlayersAfterCompleted);
+
+                displayResults(completedSquads, remainingSquads, remainingPlayersAfterCompleted, futbinCombinations, usedFromIncomplete);
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('results').innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            }
+        }
+
+        function processSquad(targetRating, availablePlayers, combinations) {
+            const combination = combinations[targetRating];
+            if (!combination) {
+                return {
+                    completed: false,
+                    missingPlayers: { error: `No combination found for rating ${targetRating}` },
+                    remainingPlayers: availablePlayers
+                };
+            }
+
+            let usedPlayers = [];
+            let missingPlayers = {};
+            let remainingPlayers = [...availablePlayers];
+
+            // Process each combination requirement
+            for (const req of combination.combinations) {
+                const neededRating = req.rating;
+                const neededCount = req.count;
+                const availableCount = getPlayerCount(remainingPlayers, neededRating);
+
+                if (availableCount >= neededCount) {
+                    // Use the players
+                    usedPlayers.push({
+                        rating: neededRating,
+                        count: neededCount
+                    });
+                    remainingPlayers = updatePlayerCount(remainingPlayers, neededRating, neededCount);
+                } else {
+                    // Record missing players
+                    missingPlayers[neededRating] = neededCount - availableCount;
+                }
+            }
+
+            return {
+                completed: Object.keys(missingPlayers).length === 0,
+                usedPlayers,
+                missingPlayers,
+                remainingPlayers
+            };
+        }
+
+        function getPlayerCount(players, rating) {
+            const player = players.find(p => p.rating === rating);
+            return player ? player.count : 0;
+        }
+
+        function removePlayers(players, rating, count) {
+            const playerIndex = players.findIndex(p => p.rating === rating);
+            if (playerIndex !== -1) {
+                players[playerIndex].count -= count;
+                if (players[playerIndex].count <= 0) {
+                    players.splice(playerIndex, 1);
+                }
+            }
+        }
+
+        function updatePlayerCount(players, rating, count) {
+            return players.map(p => {
+                if (p.rating === rating) {
+                    return { ...p, count: p.count - count };
+                }
+                return p;
+            }).filter(p => p.count > 0);
+        }
+
+        function displayResults(completedSquads, incompleteSquads, remainingPlayers, futbinCombinations, usedFromIncomplete) {
+            let html = '';
+
+            // Get all unique ratings from initial club players
+            const allRatings = new Set(JSON.parse(document.getElementById('clubPlayers').value).map(p => p.rating));
+            const sortedRatings = Array.from(allRatings).sort((a, b) => b - a);
+
+            // Get all used ratings from completed squads
+            const usedRatings = new Map();
+            completedSquads.forEach(squad => {
+                squad.usedPlayers.forEach(player => {
+                    usedRatings.set(player.rating, (usedRatings.get(player.rating) || 0) + player.count);
+                });
+            });
+
+            // Calculate remaining players after completed squads
+            const remainingAfterCompleted = new Map();
+            sortedRatings.forEach(rating => {
+                const initialCount = JSON.parse(document.getElementById('clubPlayers').value).find(p => p.rating === rating)?.count || 0;
+                const usedFromCompleted = usedRatings.get(rating) || 0;
+                remainingAfterCompleted.set(rating, initialCount - usedFromCompleted);
+            });
+
+            // Display completed squads
+            html += '<h3 class="section-title">Completed Squads</h3>';
+            if (completedSquads.length > 0) {
+                completedSquads.forEach(squad => {
+                    html += `
+                        <div class="squad-status completed">
+                            <strong>${squad["squad-rating"]}-rated squad</strong>
+                            <pre>`;
+                    squad.usedPlayers.forEach(player => {
+                        html += `${player.rating} rated: <span class="player-count">${player.count}</span><br>`;
+                    });
+                    html += `</pre>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div class="success">No squads completed yet</div>';
+            }
+
+            // Display incomplete squads
+            html += '<h3 class="section-title">Incomplete Squads</h3>';
+            if (incompleteSquads.length > 0) {
+                incompleteSquads.forEach(squad => {
+                    const usedPlayers = [];
+                    const combination = futbinCombinations[squad["squad-rating"]];
+                    if (combination) {
+                        combination.combinations.forEach(req => {
+                            const availableCount = remainingAfterCompleted.get(req.rating) || 0;
+                            const usedCount = Math.min(availableCount, req.count);
+                            if (usedCount > 0) {
+                                usedPlayers.push({
+                                    rating: req.rating,
+                                    count: usedCount
+                                });
+                            }
+                        });
+                    }
+                    html += `
+                        <div class="squad-status incomplete">
+                            <strong>${squad["squad-rating"]}-rated squad</strong>
+                            <pre>Used players:
+`;
+                    // Display used players
+                    usedPlayers.forEach(player => {
+                        html += `${player.rating} rated: <span class="player-count">${player.count}</span><br>`;
+                    });
+                    html += `<br>Missing players:
+`;
+                    // Display missing players
+                    Object.entries(squad.missingPlayers).forEach(([rating, count]) => {
+                        html += `${rating} rated: <span class="player-count used">${count}</span><br>`;
+                    });
+                    html += `</pre>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<div class="success">No incomplete squads</div>';
+            }
+
+            // Calculate and display total missing players
+            html += '<h3 class="section-title">Total Missing Players</h3>';
+            const totalMissing = new Map();
+            
+            // Sum up all missing players from incomplete squads
+            incompleteSquads.forEach(squad => {
+                Object.entries(squad.missingPlayers).forEach(([rating, count]) => {
+                    totalMissing.set(parseInt(rating), (totalMissing.get(parseInt(rating)) || 0) + count);
+                });
+            });
+
+            if (totalMissing.size > 0) {
+                html += '<pre>';
+                Array.from(totalMissing.entries())
+                    .sort((a, b) => b[0] - a[0]) // Sort by rating in descending order
+                    .forEach(([rating, count]) => {
+                        html += `${rating} rated: <span class="player-count used">${count}</span><br>`;
+                    });
+                html += '</pre>';
+            } else {
+                html += '<div class="success">No missing players</div>';
+            }
+
+            // Display remaining players in two columns
+            html += '<h3 class="section-title">Remaining Players</h3>';
+            html += '<div class="remaining-players-container">';
+            
+            // Left column - After completed squads
+            html += '<div class="remaining-players-section">';
+            html += '<h4>After Completed Squads</h4>';
+            
+            // Display players after completed squads
+            html += '<pre>';
+            sortedRatings.forEach(rating => {
+                const remainingCount = remainingAfterCompleted.get(rating) || 0;
+                const initialCount = JSON.parse(document.getElementById('clubPlayers').value).find(p => p.rating === rating)?.count || 0;
+                const usedCount = usedRatings.get(rating) || 0;
+
+                if (usedCount > 0) {
+                    html += `${rating} rated: ${remainingCount} <span class="player-count original">(${initialCount}</span><span class="player-count used">-${usedCount}</span>)<br>`;
+                } else {
+                    html += `${rating} rated: ${initialCount}<br>`;
+                }
+            });
+            html += '</pre>';
+            html += '</div>';
+
+            // Right column - After incomplete squads
+            html += '<div class="remaining-players-section">';
+            html += '<h4>After Incomplete Squads</h4>';
+            
+            // Display players after incomplete squads
+            html += '<pre>';
+            sortedRatings.forEach(rating => {
+                const remainingAfterCompletedCount = remainingAfterCompleted.get(rating) || 0;
+                const usedFromIncompleteCount = usedFromIncomplete.get(rating) || 0;
+                const remainingAfterIncompleteCount = Math.max(0, remainingAfterCompletedCount - usedFromIncompleteCount);
+
+                if (usedFromIncompleteCount > 0) {
+                    html += `${rating} rated: ${remainingAfterIncompleteCount} <span class="player-count original">(${remainingAfterCompletedCount}</span><span class="player-count used">-${usedFromIncompleteCount}</span>)<br>`;
+                } else {
+                    html += `${rating} rated: ${remainingAfterCompletedCount}<br>`;
+                }
+            });
+            html += '</pre>';
+            html += '</div>';
+
+            html += '</div>';
+
+            document.getElementById('results').innerHTML = html;
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.textContent);
+        }
+
+        function toggleJsonPreview(id) {
+            const content = document.getElementById(id);
+            const button = content.previousElementSibling.querySelector('.expand-button');
+            content.classList.toggle('collapsed');
+            button.textContent = content.classList.contains('collapsed') ? 'Expand' : 'Collapse';
+        }
+
+        function handleClubPlayersFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        // Parse CSV data
+                        const csvData = e.target.result;
+                        const lines = csvData.split('\n').filter(line => line.trim()); // Remove empty lines
+                        const headers = lines[0].split(',').map(h => h.trim());
+                        
+                        // Process data to get counts by rating
+                        const playerCounts = {};
+                        lines.slice(1).forEach(line => {
+                            const values = line.split(',').map(v => v.trim());
+                            const player = {};
+                            headers.forEach((header, index) => {
+                                player[header] = values[index];
+                            });
+                            
+                            // Try different possible rating field names
+                            const rating = parseInt(player.Rating || player.rating || player['Player Rating']);
+                            if (!isNaN(rating)) {
+                                playerCounts[rating] = (playerCounts[rating] || 0) + 1;
+                            }
+                        });
+
+                        // Convert to array format and sort by rating
+                        const result = Object.entries(playerCounts)
+                            .map(([rating, count]) => ({
+                                rating: parseInt(rating),
+                                count: count
+                            }))
+                            .sort((a, b) => b.rating - a.rating);
+
+                        // Update input and preview
+                        const jsonData = JSON.stringify(result, null, 2);
+                        document.getElementById('clubPlayers').value = jsonData;
+                        const preview = document.querySelector('#clubPlayersPreview pre');
+                        preview.textContent = jsonData;
+                        
+                    } catch (error) {
+                        console.error('Error processing club players file:', error);
+                        document.getElementById('results').innerHTML = `<div class="error">Error processing club players file: ${error.message}</div>`;
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function handleLockedPlayersFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        // Parse the locked player IDs from the CSV
+                        const lockedPlayerIds = e.target.result.split(',').map(id => parseInt(id.trim()));
+                        
+                        // Get current club players data
+                        const clubPlayersData = JSON.parse(document.getElementById('clubPlayers').value);
+                        
+                        // Remove locked players and recalculate counts
+                        const filteredPlayers = clubPlayersData.map(player => {
+                            // Since we're working with processed data that only has rating and count,
+                            // we'll just reduce the count by 1 for each locked player of that rating
+                            return {
+                                rating: player.rating,
+                                count: Math.max(0, player.count - 1)
+                            };
+                        }).filter(player => player.count > 0); // Only keep players with count > 0
+                        
+                        // Sort by rating in descending order
+                        filteredPlayers.sort((a, b) => b.rating - a.rating);
+                        
+                        // Format the data for display
+                        const jsonData = JSON.stringify(filteredPlayers, null, 2);
+                        
+                        // Update the preview section
+                        const preview = document.querySelector('#lockedPlayersPreview pre');
+                        preview.textContent = jsonData;
+                        
+                        // Update the final data section
+                        document.getElementById('clubPlayers').value = jsonData;
+                        
+                        // Log the changes for debugging
+                        console.log('Original club players:', clubPlayersData);
+                        console.log('Locked player IDs:', lockedPlayerIds);
+                        console.log('Filtered players:', filteredPlayers);
+                        console.log('Updated final data section:', document.getElementById('clubPlayers').value);
+                        
+                    } catch (error) {
+                        console.error('Error processing locked players file:', error);
+                        document.getElementById('results').innerHTML = `<div class="error">Error processing locked players file: ${error.message}</div>`;
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+    </script>
+</body>
+</html> 
